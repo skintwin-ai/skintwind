@@ -8,14 +8,16 @@ Skintwind combines a generic supply chain foundation (**wodog**) with skincare-s
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ Layer 3: Skincare Application (ext/skintwind/)           │
-│ • Salons, formulations, procedures                       │
+│ Layer 3: Workerd Extension (ext/skintwind/)              │
+│ • Unified skintwind application                          │
+│ • REST API for salons, formulations, procedures          │
+│ • Cap'n Proto configuration                              │
 │ • Progressive examples (mobile therapist → supply chain) │
 ├──────────────────────────────────────────────────────────┤
-│ Layer 2: Workerd Extension Pattern (ext/)                │
-│ • Cap'n Proto configuration                              │
-│ • Public/internal modules                                │
-│ • Capability-based security                              │
+│ Layer 2: Skincare Domain (src/skincare/ → dist/skincare/)│
+│ • TypeScript types: Salon, MedSpa, Lab, Formulation     │
+│ • SkincareLookup extending SupplyChainLookup            │
+│ • Procedures with steps, ingredients, skin types         │
 ├──────────────────────────────────────────────────────────┤
 │ Layer 1: Generic Supply Chain Foundation (src/ - wodog)  │
 │ • Actor types, relationships, products                   │
@@ -26,7 +28,27 @@ Skintwind combines a generic supply chain foundation (**wodog**) with skincare-s
 
 ## Quick Start
 
-### 5-Minute Tutorial: Mobile Therapist
+### Run the Unified Skintwind Application
+
+```bash
+# Build TypeScript types
+npm install
+npm run build
+
+# Run skintwind extension (requires workerd)
+bazel run //src/workerd/server:workerd -- serve $(pwd)/ext/skintwind/skintwind-config.capnp
+
+# Query the API
+curl http://localhost:8080/                           # API documentation
+curl http://localhost:8080/salons                     # Get all salons
+curl http://localhost:8080/salon/salon1               # Get specific salon
+curl http://localhost:8080/salon/salon1/procedures    # Get salon procedures
+curl http://localhost:8080/procedure/proc1            # Get procedure with cost
+curl http://localhost:8080/formulations?skinType=dry  # Query formulations
+curl http://localhost:8080/query/salons?city=New%20York  # Query salons
+```
+
+### 5-Minute Tutorial: Mobile Therapist Example
 
 ```bash
 # Clone and navigate
@@ -62,6 +84,36 @@ curl -X POST http://localhost:8080/supply-chain/path \
 ```
 
 **See [Quick Start Guide](docs/QUICK_START.md) for complete tutorials**
+
+## Skintwind Extension
+
+The **`ext/skintwind/`** directory contains the unified skintwind application - a complete workerd extension that combines:
+- Generic supply chain patterns (wodog)
+- Skincare-specific types (src/skincare/)
+- REST API for salons, procedures, and formulations
+
+### Features
+- **3 Salons**: Serenity Spa (NYC), Radiance Beauty (LA), Eternal Youth Med Spa (Miami)
+- **1 Lab**: Pure Formulations Lab (production facility)
+- **4 Formulations**: Moisturizer, Serum, Cleanser, Night Cream
+- **6 Procedures**: Facials, chemical peels, massages, LED treatments
+- **Complete REST API**: Query by specialty, city, skin type, duration, price
+
+### API Endpoints
+```
+GET /                              # API documentation
+GET /salons                        # All salons
+GET /salon/{id}                    # Specific salon
+GET /salon/{id}/procedures         # Salon procedures
+GET /labs                          # Production labs
+GET /procedure/{id}                # Procedure with calculated cost
+GET /procedures?skinType=...       # Query procedures
+GET /formulation/{id}              # Formulation details
+GET /formulations?type=...         # Query formulations
+GET /query/salons?specialty=...    # Query salons
+```
+
+See **[ext/skintwind/README.md](ext/skintwind/README.md)** for complete documentation.
 
 ## Overview
 
